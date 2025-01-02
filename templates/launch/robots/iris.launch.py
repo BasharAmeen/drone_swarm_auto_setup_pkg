@@ -28,12 +28,13 @@ def launch_setup(context):
     master = LaunchConfiguration('master').perform(context)
     sitl = LaunchConfiguration('sitl').perform(context)
     out = LaunchConfiguration('out').perform(context)
-
+    fcu_url = LaunchConfiguration('fcu_url').perform(context)
 
     # Package directories
     pkg_ardupilot_sitl = get_package_share_directory("ardupilot_sitl")
     pkg_drone_swarm_auto_setup_pkg = get_package_share_directory("drone_swarm_auto_setup_pkg")
     pkg_ardupilot_gazebo = get_package_share_directory("ardupilot_gazebo")
+    pkg_mavros = get_package_share_directory("mavros")
 
     print("str (int(instance) - 1) :", str (int(instance) - 1))
     # SITL DDS UDP launch
@@ -142,6 +143,37 @@ def launch_setup(context):
         }],
         output="screen"
     )
+        # MAVROS node for this drone instance
+    print(f"pkg_mavros: {pkg_mavros}")
+        # MAVROS launch configuration
+    mavros_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_mavros, 'launch', 'apm.launch.py')
+        ),
+        launch_arguments={
+            'namespace': f'mavros_drone{instance}',
+            'fcu_url': fcu_url,
+            'tgt_system': str(instance),  # Convert to string
+            'tgt_component': '1',
+            'fcu_protocol': 'v2.0',
+            'respawn_mavros': 'false',
+        }.items(),
+    )
+    # Run mavros_node
+    # mav_ros_node = Node(
+    #     package='mavros',
+    #     executable='mavros_node',
+    #     name=f'mavros_node_drone{instance}',
+    #     namespace=f'drone{instance}',
+    #         parameters=[{
+    #             'fcu_url': fcu_url,
+    #             'tgt_system': int(instance),
+    #             'tgt_component': "1",
+    #             'fcu_protocol': 'v2.0',
+    #             'respawn_mavros': False,
+    #         }],        output='screen',
+    #     emulate_tty=True
+    # )
 
     # topic_tools_tf = Node(
     #     package="topic_tools",
@@ -162,6 +194,8 @@ def launch_setup(context):
 
     return [
         sitl_dds,
+        mavros_launch,
+        # mav_ros_node,
         robot_state_publisher,
         gazebo_ros_bridge,
         # RegisterEventHandler(

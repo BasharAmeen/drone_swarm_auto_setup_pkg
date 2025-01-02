@@ -31,6 +31,11 @@ def generate_launch_description():
          master = f"tcp:127.0.0.1:{5750+ (i * 10)}"
          sitl = f"127.0.0.1:{5491 + (i * 10)}" # first time will  be 5501
          out = f"127.0.0.1:{14540  + (i * 10)}"
+         # Calculate unique MAVROS FCU URLs for each drone
+         # Format: udp://<local_ip>:<local_port>@<remote_port>
+         mavros_local_port = 14551 + ((i-1) * 10)  # local port for MAVROS
+         mavros_remote_port = 14555 + ((i-1) * 10)  # remote port for MAVROS
+         fcu_url = f"udp://:14540@127.0.0.1:{14540 + (i * 10)}"        
          
          robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -54,6 +59,7 @@ def generate_launch_description():
             "master": master,
             "sitl": sitl,
             "out": out,
+            "fcu_url": fcu_url,  # Add FCU URL for MAVROS
         }.items(),
         )
         
