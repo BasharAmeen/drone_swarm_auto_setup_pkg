@@ -1,0 +1,6 @@
+Panels:
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Name: Camera Drone 1
+      Topic:
+        Value: /drone1/camera/image
